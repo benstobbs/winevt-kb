@@ -212,6 +212,13 @@ def Main():
           'path of the volume containing C:\\Windows or the filename of '
           'a storage media image containing the C:\\Windows directory.'))
 
+  argument_parser.add_argument(
+      '--system-key', dest='system_key', action='store', metavar='HKEY_LOCAL_MACHINE\\System\\',
+      default='HKEY_LOCAL_MACHINE\\System\\', help=(
+        'System registry key location. Change from default to use CLIENTREG hive.'
+      )
+  )
+
   options = argument_parser.parse_args()
 
   if not options.source:
@@ -266,7 +273,7 @@ def Main():
   print('Windows version: {0:s}.'.format(extractor_object.windows_version))
   print('')
 
-  extractor_object.ExtractEventLogMessageStrings(output_writer)
+  extractor_object.ExtractEventLogMessageStrings(output_writer, options.system_key)
   output_writer.Close()
 
   if extractor_object.invalid_message_filenames:

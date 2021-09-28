@@ -99,7 +99,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     """The Windows version (setter)."""
     self._windows_version = value
 
-  def _CollectEventLogTypes(self, all_control_sets=False):
+  def _CollectEventLogTypes(self, system_key, all_control_sets=False):
     """Collects the Event Log types.
 
     Args:
@@ -112,7 +112,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     """
     event_log_types = {}
     for event_log_provider in self._GetEventLogProviders(
-        all_control_sets=all_control_sets):
+        system_key=system_key, all_control_sets=all_control_sets):
       if event_log_provider.log_type not in event_log_types:
         event_log_types[event_log_provider.log_type] = {}
 
@@ -283,7 +283,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
     message_file.Close()
 
-  def _GetEventLogProviders(self, all_control_sets=False):
+  def _GetEventLogProviders(self, system_key, all_control_sets=False):
     """Retrieves the Event Log providers.
 
     Args:
@@ -294,7 +294,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
       EventLogProvider: Event Log provider.
     """
     if all_control_sets:
-      system_key = self._registry.GetKeyByPath('HKEY_LOCAL_MACHINE\\System\\')
+      system_key = self._registry.GetKeyByPath(system_key)
       if system_key:
         for control_set_key in system_key.GetSubkeys():
           if control_set_key.name.startswith('ControlSet'):
@@ -308,7 +308,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
     else:
       eventlog_key = self._registry.GetKeyByPath(
-          'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services\\EventLog')
+          f'{system_key}CurrentControlSet\\Services\\EventLog')
       if eventlog_key:
         logging.info('Current control set')
         for event_log_provider in self._CollectEventLogProvidersFromKey(
@@ -406,7 +406,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
 
     return message_file
 
-  def ExtractEventLogMessageStrings(self, output_writer):
+  def ExtractEventLogMessageStrings(self, output_writer, system_key='HKEY_LOCAL_MACHINE\\System\\'):
     """Extracts the Event Log message strings from the message files.
 
     Args:
@@ -419,7 +419,7 @@ class EventMessageStringExtractor(dfvfs_volume_scanner.WindowsVolumeScanner):
     self.missing_table_message_filenames = []
     processed_message_filenames = []
     event_log_types = self._CollectEventLogTypes(
-        all_control_sets=all_control_sets)
+        system_key, all_control_sets=all_control_sets)
 
     for event_log_sources in event_log_types.values():
       for event_log_provider in event_log_sources.values():
