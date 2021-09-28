@@ -15,3 +15,8 @@
 /dist
 /winevtrc.egg-info
 
+# VS Code
+.vscode/*
+
+# Generated databases
+*.db
